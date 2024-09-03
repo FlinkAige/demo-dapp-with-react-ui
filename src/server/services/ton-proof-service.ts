@@ -127,7 +127,7 @@ export class TonProofService {
         ts,
         // Buffer.from(message.payload),
       ]);
-      console.log("msg_header1_hex", msg_header1.toString("hex")); // msg_header1_hex
+      console.log("msg_header1_hex", msg_header1.toString("hex")); // msg_header1_hex 合约参数1
       const msg_header1_sha256 = Buffer.from(await sha256(msg_header1));
       console.log("msg_header1_sha256", msg_header1_sha256.toString("hex"));
 
@@ -147,7 +147,7 @@ export class TonProofService {
         Buffer.from(tonConnectPrefix),
         // msgHash,
       ]);
-      console.log("full_msg_head_hex", full_msg_head.toString("hex")); // full_msg_head_hex
+      console.log("full_msg_head_hex", full_msg_head.toString("hex")); // full_msg_head_hex 合约参数2
       const full_msg_head_sha256 = Buffer.from(await sha256(full_msg_head));
       console.log("full_msg_head_sha256", full_msg_head_sha256.toString("hex"));
 
@@ -156,10 +156,10 @@ export class TonProofService {
       console.log("message-hex", result.toString("hex"));
 
       // console.log("signature", message.signature)
-      console.log("signature-hex", message.signature.toString("hex"))
+      console.log("signature-hex", message.signature.toString("hex")) // 合约参数3
 
       // console.log("ton-publicKey", publicKey);
-      console.log("ton-publicKey-hex", publicKey.toString("hex"));
+      console.log("ton-publicKey-hex", publicKey.toString("hex")); // 合约参数4
 
       const bool = sign.detached.verify(result, message.signature, publicKey);
       console.log("bool", bool);
