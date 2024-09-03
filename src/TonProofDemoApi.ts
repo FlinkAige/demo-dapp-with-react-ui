@@ -6,6 +6,7 @@ import {
 } from "@tonconnect/ui-react";
 import './patch-local-storage-for-github-pages';
 import {CreateJettonRequestDto} from "./server/dto/create-jetton-request-dto";
+import { arrayToHex, SerialBuffer, hexToUint8Array } from '@amax/amaxjs-v2/dist/eosjs-serialize';
 
 class TonProofDemoApiService {
   private localStorageKey = 'demo-api-access-token';
@@ -31,7 +32,14 @@ class TonProofDemoApiService {
           method: 'POST',
         })
       ).json();
-      return {tonProof: response.payload as string};
+      // return {tonProof: response.payload as string};
+      // return {tonProof: "AM7NQEt776J1HZmaMRyRRuY6ewcSFK63ZAKx1i9BY3WdSHiANxK2"};
+
+      const buf = new SerialBuffer({ textEncoder: new TextEncoder(), textDecoder: new TextDecoder() });
+      buf.pushPublicKey("AM7NQEt776J1HZmaMRyRRuY6ewcSFK63ZAKx1i9BY3WdSHiANxK2");
+      const amaxPayload = arrayToHex(buf.getUint8Array(34));
+      console.log("amaxPayload", amaxPayload);
+      return {tonProof: amaxPayload.toString()};
     } catch {
       return null;
     }

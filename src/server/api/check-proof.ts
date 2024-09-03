@@ -13,6 +13,7 @@ import {createAuthToken, verifyToken} from "../utils/jwt";
 export const checkProof: HttpResponseResolver = async ({request}) => {
   try {
     const body = CheckProofRequest.parse(await request.json());
+    console.log("checkProof-body", body);
 
     const client = TonApiService.create(body.network);
     const service = new TonProofService();
@@ -22,10 +23,10 @@ export const checkProof: HttpResponseResolver = async ({request}) => {
       return badRequest({error: 'Invalid proof'});
     }
 
-    const payloadToken = body.proof.payload;
-    if (!await verifyToken(payloadToken)) {
-      return badRequest({error: 'Invalid token'});
-    }
+    // const payloadToken = body.proof.payload;
+    // if (!await verifyToken(payloadToken)) {
+    //   return badRequest({error: 'Invalid token'});
+    // }
 
     const token = await createAuthToken({address: body.address, network: body.network});
 

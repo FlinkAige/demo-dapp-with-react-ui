@@ -1,9 +1,10 @@
-import {sha256} from "@ton/crypto";
-import {Address, Cell, contractAddress, loadStateInit} from "@ton/ton";
-import {Buffer} from "buffer";
-import {randomBytes, sign} from "tweetnacl";
-import {CheckProofRequestDto} from "../dto/check-proof-request-dto";
-import {tryParsePublicKey} from "../wrappers/wallets-data";
+import { sha256 } from "@ton/crypto";
+import { Address, Cell, contractAddress, loadStateInit } from "@ton/ton";
+import { Buffer } from "buffer";
+import { randomBytes, sign } from "tweetnacl";
+import { CheckProofRequestDto } from "../dto/check-proof-request-dto";
+import { tryParsePublicKey } from "../wrappers/wallets-data";
+import { arrayToHex, SerialBuffer, hexToUint8Array } from '@amax/amaxjs-v2/dist/eosjs-serialize';
 
 const tonProofPrefix = 'ton-proof-item-v2/';
 const tonConnectPrefix = 'ton-connect';
@@ -27,6 +28,7 @@ export class TonProofService {
    * https://github.com/ton-blockchain/ton-connect/blob/main/requests-responses.md#address-proof-signature-ton_proof
    */
   public async checkProof(payload: CheckProofRequestDto, getWalletPublicKey: (address: string) => Promise<Buffer | null>): Promise<boolean> {
+    console.log("CheckProofRequestDto", payload);
     try {
       const stateInit = loadStateInit(Cell.fromBase64(payload.proof.state_init).beginParse());
 
@@ -73,6 +75,7 @@ export class TonProofService {
         stateInit: payload.proof.state_init,
         timestamp: payload.proof.timestamp
       };
+      console.log("message", message);
 
       const wc = Buffer.alloc(4);
       wc.writeUInt32BE(message.workchain, 0);
@@ -82,6 +85,12 @@ export class TonProofService {
 
       const dl = Buffer.alloc(4);
       dl.writeUInt32LE(message.domain.lengthBytes, 0);
+
+      // const buf = new SerialBuffer({ textEncoder: new TextEncoder(), textDecoder: new TextDecoder() });
+      // buf.pushPublicKey("AM7NQEt776J1HZmaMRyRRuY6ewcSFK63ZAKx1i9BY3WdSHiANxK2");
+      // const amaxPayload = arrayToHex(buf.getUint8Array(34));
+      // console.log("amaxPayload", amaxPayload);
+      // console.log("hexToUint8Array(amaxPayload)", hexToUint8Array(amaxPayload));
 
       // message = utf8_encode("ton-proof-item-v2/") ++
       //           Address ++
@@ -96,9 +105,34 @@ export class TonProofService {
         Buffer.from(message.domain.value),
         ts,
         Buffer.from(message.payload),
+        // hexToUint8Array(message.payload), // 验证不通过
       ]);
+      // console.log("tonProofPrefix", tonProofPrefix);
+      // console.log("tonProofPrefix2", Buffer.from(tonProofPrefix));
+      // console.log("wc", wc.toString("hex"));
+      console.log("address", message.address.toString("hex"));
+      // console.log("dl", dl.toString("hex"));
+      // console.log("domain", message.domain.value);
+      // console.log("ts", ts.toString("hex"));
+      console.log("payload", message.payload);
+      console.log("msg", msg.toString("hex"));
+      console.log("msg-str", msg.toString('utf8'));
+
+      const msg_header1 = Buffer.concat([
+        Buffer.from(tonProofPrefix),
+        wc,
+        message.address,
+        dl,
+        Buffer.from(message.domain.value),
+        ts,
+        // Buffer.from(message.payload),
+      ]);
+      console.log("msg_header1_hex", msg_header1.toString("hex")); // msg_header1_hex
+      const msg_header1_sha256 = Buffer.from(await sha256(msg_header1));
+      console.log("msg_header1_sha256", msg_header1_sha256.toString("hex"));
 
       const msgHash = Buffer.from(await sha256(msg));
+      console.log("msgHash-sha256", msgHash.toString("hex"));
 
       // signature = Ed25519Sign(privkey, sha256(0xffff ++ utf8_encode("ton-connect") ++ sha256(message)))
       const fullMsg = Buffer.concat([
@@ -106,13 +140,43 @@ export class TonProofService {
         Buffer.from(tonConnectPrefix),
         msgHash,
       ]);
+      console.log("fullMsg_hex", fullMsg.toString("hex"));
+
+      const full_msg_head = Buffer.concat([
+        Buffer.from([0xff, 0xff]),
+        Buffer.from(tonConnectPrefix),
+        // msgHash,
+      ]);
+      console.log("full_msg_head_hex", full_msg_head.toString("hex")); // full_msg_head_hex
+      const full_msg_head_sha256 = Buffer.from(await sha256(full_msg_head));
+      console.log("full_msg_head_sha256", full_msg_head_sha256.toString("hex"));
 
       const result = Buffer.from(await sha256(fullMsg));
+      // console.log("message", result);
+      console.log("message-hex", result.toString("hex"));
 
-      return sign.detached.verify(result, message.signature, publicKey);
+      // console.log("signature", message.signature)
+      console.log("signature-hex", message.signature.toString("hex"))
+
+      // console.log("ton-publicKey", publicKey);
+      console.log("ton-publicKey-hex", publicKey.toString("hex"));
+
+      const bool = sign.detached.verify(result, message.signature, publicKey);
+      console.log("bool", bool);
+      return bool;
     } catch (e) {
+      console.log("[ERR]checkProof", e);
       return false;
     }
   }
 
 }
+
+// Private key: 5JDbxAwCnFhctqGByrKu6SasURR2sAYDb9gLfQJkBH4tyvbsJdY
+// Public key: AM7NQEt776J1HZmaMRyRRuY6ewcSFK63ZAKx1i9BY3WdSHiANxK2
+
+
+// const hello = Buffer.from(await sha256(Buffer.from("hello")));
+// console.log("hello", Buffer.from("hello").toString());
+// console.log("hello-hex", Buffer.from("hello").toString("hex"));
+// console.log("hello-sha256", hello.toString("hex"));
