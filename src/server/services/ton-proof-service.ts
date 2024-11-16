@@ -118,7 +118,7 @@ export class TonProofService {
       console.log("msg", msg.toString("hex"));
       console.log("msg-str", msg.toString('utf8'));
 
-      const msg_header1 = Buffer.concat([
+      const ed_msg_header1 = Buffer.concat([
         Buffer.from(tonProofPrefix),
         wc,
         message.address,
@@ -127,9 +127,9 @@ export class TonProofService {
         ts,
         // Buffer.from(message.payload),
       ]);
-      console.log("msg_header1_hex", msg_header1.toString("hex")); // msg_header1_hex 合约参数1
-      const msg_header1_sha256 = Buffer.from(await sha256(msg_header1));
-      console.log("msg_header1_sha256", msg_header1_sha256.toString("hex"));
+      console.log("ed_msg_header1_hex", ed_msg_header1.toString("hex")); // ed_msg_header1_hex 合约参数1
+      const ed_msg_header1_sha256 = Buffer.from(await sha256(ed_msg_header1));
+      console.log("ed_msg_header1_sha256", ed_msg_header1_sha256.toString("hex"));
 
       const msgHash = Buffer.from(await sha256(msg));
       console.log("msgHash-sha256", msgHash.toString("hex"));
@@ -142,14 +142,14 @@ export class TonProofService {
       ]);
       console.log("fullMsg_hex", fullMsg.toString("hex"));
 
-      const full_msg_head = Buffer.concat([
+      const ed_msg_header2 = Buffer.concat([
         Buffer.from([0xff, 0xff]),
         Buffer.from(tonConnectPrefix),
         // msgHash,
       ]);
-      console.log("full_msg_head_hex", full_msg_head.toString("hex")); // full_msg_head_hex 合约参数2
-      const full_msg_head_sha256 = Buffer.from(await sha256(full_msg_head));
-      console.log("full_msg_head_sha256", full_msg_head_sha256.toString("hex"));
+      console.log("ed_msg_header2_hex", ed_msg_header2.toString("hex")); // ed_msg_header2_hex 合约参数2
+      const ed_msg_header2_sha256 = Buffer.from(await sha256(ed_msg_header2));
+      console.log("ed_msg_header2_sha256", ed_msg_header2_sha256.toString("hex"));
 
       const result = Buffer.from(await sha256(fullMsg));
       // console.log("message", result);
